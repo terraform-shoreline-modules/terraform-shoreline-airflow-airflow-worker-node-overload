@@ -1,0 +1,138 @@
+{
+  "name": "airflow_worker_node_overload",
+  "description": "Apache Airflow is a platform used for creating, scheduling, and monitoring workflows. A worker node is a component of this platform that executes tasks and runs jobs in parallel. When a worker node is overloaded, it means that it is unable to handle the number of tasks assigned to it, causing failures in the execution of workflows. This incident type refers to the situation where an Apache Airflow worker node is overloaded and needs to be addressed to ensure that the platform can continue to function properly.",
+  "params": [
+    {
+      "name": "AIRFLOW_HOME",
+      "value": ""
+    },
+    {
+      "name": "MEMORY_THRESHOLD",
+      "value": ""
+    },
+    {
+      "name": "CPU_THRESHOLD",
+      "value": ""
+    },
+    {
+      "name": "DISK_THRESHOLD",
+      "value": ""
+    },
+    {
+      "name": "WORKER_NODE_CONFIG",
+      "value": ""
+    },
+    {
+      "name": "NEW_MEM_VALUE",
+      "value": ""
+    },
+    {
+      "name": "NEW_CPU_VALUE",
+      "value": ""
+    },
+    {
+      "name": "HOST_NAME",
+      "value": ""
+    },
+    {
+      "name": "K8S_CLUSTER_NAME",
+      "value": ""
+    },
+    {
+      "name": "NAMESPACE",
+      "value": ""
+    }
+  ],
+  "cells": [
+    {
+      "name": "cell_1",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## Airflow Worker Node Overload.\nApache Airflow is a platform used for creating, scheduling, and monitoring workflows. A worker node is a component of this platform that executes tasks and runs jobs in parallel. When a worker node is overloaded, it means that it is unable to handle the number of tasks assigned to it, causing failures in the execution of workflows. This incident type refers to the situation where an Apache Airflow worker node is overloaded and needs to be addressed to ensure that the platform can continue to function properly."
+    },
+    {
+      "name": "cell_2",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## Check CPU usage of worker nodes"
+    },
+    {
+      "name": "cell_3",
+      "type": "OP_LANG",
+      "enabled": true,
+      "content": "(host | host_name=$HOST_NAME) union (pod | k8s_cluster_name=$K8S_CLUSTER_NAME | namespace=$NAMESPACE) | `top -bn1 | grep \"Cpu(s)\" | sed \"s/.*, *\\([0-9.]*\\)%* id.*/\\1/\" | awk '{print 100 - $1\"% CPU usage\"}'`"
+    },
+    {
+      "name": "cell_4",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## Check memory usage of worker nodes"
+    },
+    {
+      "name": "cell_5",
+      "type": "OP_LANG",
+      "enabled": true,
+      "content": "(host | host_name=$HOST_NAME) union (pod | k8s_cluster_name=$K8S_CLUSTER_NAME | namespace=$NAMESPACE) | `free -m | grep -i mem | awk '{print $3/$2 * 100.0\"% memory usage\"}'`"
+    },
+    {
+      "name": "cell_6",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## Check disk usage of worker nodes"
+    },
+    {
+      "name": "cell_7",
+      "type": "OP_LANG",
+      "enabled": true,
+      "content": "(host | host_name=$HOST_NAME) union (pod | k8s_cluster_name=$K8S_CLUSTER_NAME | namespace=$NAMESPACE) | `df -h /`"
+    },
+    {
+      "name": "cell_8",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## Check airflow worker logs for errors"
+    },
+    {
+      "name": "cell_9",
+      "type": "OP_LANG",
+      "enabled": true,
+      "content": "(host | host_name=$HOST_NAME) union (pod | k8s_cluster_name=$K8S_CLUSTER_NAME | namespace=$NAMESPACE) | `tail -f ${AIRFLOW_HOME}/logs/worker.log`"
+    },
+    {
+      "name": "cell_10",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## Check the number of running tasks on the worker nodes"
+    },
+    {
+      "name": "cell_11",
+      "type": "OP_LANG",
+      "enabled": true,
+      "content": "(host | host_name=$HOST_NAME) union (pod | k8s_cluster_name=$K8S_CLUSTER_NAME | namespace=$NAMESPACE) | `ps aux | grep -i \"airflow worker\" | wc -l`"
+    },
+    {
+      "name": "cell_12",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## Configuration issues such as improper settings for worker node resources like CPU, memory, or disk space that do not align with the workload requirements."
+    },
+    {
+      "name": "cell_13",
+      "type": "OP_LANG",
+      "enabled": true,
+      "content": "host | host_name=$HOST_NAME | invoke_cpu_mem_disk_thresholds($MEMORY_THRESHOLD, $CPU_THRESHOLD, $DISK_THRESHOLD)"
+    },
+    {
+      "name": "cell_14",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## Increase the capacity of the worker node by adding more resources such as CPU, memory, or storage."
+    },
+    {
+      "name": "cell_15",
+      "type": "OP_LANG",
+      "enabled": true,
+      "content": "host | host_name=$HOST_NAME | invoke_update_resources($NEW_MEM_VALUE, $NEW_CPU_VALUE)"
+    }
+  ]
+}
